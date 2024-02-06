@@ -14,7 +14,7 @@ def extract_text_from_pdf(pdf_path):
 
 def generate_summary(pdf_text):
     summarizer = pipeline("summarization")
-    summary = summarizer(pdf_text, max_length=150, min_length=50, length_penalty=2.0, num_beams=4, early_stopping=True)
+    summary = summarizer(pdf_text, max_length=1500, min_length=500, length_penalty=2.0, num_beams=4, early_stopping=True)
     return summary[0]['summary_text']
 
 def upload_pdf():

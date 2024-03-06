@@ -1,25 +1,18 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const { exec } = require('child_process');
-
+const path = require('path');
 const app = express();
-app.use(bodyParser.json());
+const videoGenerator = require('./videoGenerator');
 
-app.post('/generate-video', async (req, res) => {
-    const text = req.body.text;
-    const filename = 'output.mp4'; // Output video filename
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
-    // Execute FFmpeg command to create video
-    exec(`ffmpeg -f lavfi -i color=c=blue:s=640x480:d=5 -vf drawtext=text="${text}":fontfile=Arial.ttf:fontsize=24:fontcolor=white:x=(w-text_w)/2:y=(h-text_h)/2 -y ${filename}`, (err) => {
-        if (err) {
-            console.error(err);
-            res.status(500).json({ error: 'Failed to generate video' });
-            return;
-        }
-        res.json({ videoUrl: `${req.protocol}://${req.get('host')}/${filename}` });
-    });
+app.get('/generate-video', (req, res) => {
+    const text = req.query.text || req.body.text;
+    videoGenerator.generateVideo(text);
+    res.send('Video generation started');
 });
 
 app.listen(3000, () => {
-    console.log('Server running on port 3000');
+    console.log('Server is running on port 3000');
 });

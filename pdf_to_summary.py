@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog
-from transformers import pipeline
+from transformers import TFT5ForConditionalGeneration, T5Tokenizer
 import fitz  # PyMuPDF
 
 def extract_text_from_pdf(pdf_path):
@@ -12,20 +12,41 @@ def extract_text_from_pdf(pdf_path):
 
     return text
 
-def generate_summary(pdf_text):
-    summarizer = pipeline("summarization")
-    summary = summarizer(pdf_text, max_length=1500, min_length=500, length_penalty=2.0, num_beams=4, early_stopping=True)
-    return summary[0]['summary_text']
+def generate_summary(chunk):
+    model_name = "t5-small"
+    tokenizer = T5Tokenizer.from_pretrained(model_name, legacy=False)
+    
+    # Choose PyTorch or TensorFlow based on your preference
+    # For PyTorch:
+    # model = T5ForConditionalGeneration.from_pretrained(model_name)
+    
+    # For TensorFlow:
+    model = TFT5ForConditionalGeneration.from_pretrained(model_name)
+
+    input_ids = tokenizer.encode("summarize: " + chunk, return_tensors="pt", max_length=1024, truncation=True)
+    summary_ids = model.generate(input_ids, max_length=300, num_beams=8, length_penalty=1.0, early_stopping=False)
+
+    summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+    return summary
 
 def upload_pdf():
     file_path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
     
     if file_path:
         pdf_text = extract_text_from_pdf(file_path)
-        summary_text = generate_summary(pdf_text)
+
+        # Split the text into chunks (you might need to fine-tune this based on your document structure)
+        chunks = [chunk.strip() for chunk in pdf_text.split("\n") if chunk.strip()]
+        
+        # Generate summaries for each chunk
+        summaries = [generate_summary(chunk) for chunk in chunks]
+
+        # Combine summaries into a single comprehensive summary
+        comprehensive_summary = "\n".join(summaries)
+
         result_text.config(state=tk.NORMAL)
         result_text.delete("1.0", tk.END)
-        result_text.insert(tk.END, summary_text)
+        result_text.insert(tk.END, comprehensive_summary)
         result_text.config(state=tk.DISABLED)
 
 # Create the main window
@@ -41,4 +62,3 @@ result_text.pack(pady=10)
 
 # Start the main loop
 window.mainloop()
-

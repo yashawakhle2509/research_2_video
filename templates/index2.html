@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF Summarization</title>
+</head>
+<body>
+    <h1>Upload a PDF file</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="pdf_file" accept=".pdf"><br><br>
+        <input type="submit" value="Upload and Summarize">
+    </form>
+    {% if error %}
+    <p>{{ error }}</p>
+    {% endif %}
+    {% if summary %}
+    <h2>Summary:</h2>
+    <p>{{ summary }}</p>
+    {% endif %}
+    {% if audio_path %}
+    <audio controls>
+        <source src="{{ audio_path }}" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    {% endif %}
+</body>
+</html>
